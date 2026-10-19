@@ -30,6 +30,22 @@ ros2 launch crane_plus_examples \
   use_sim_time:=true
 ```
 
+## カメラに関するコマンド
+```bash
+# TerminalCでカメラブリッジ
+ros2 run ros_gz_bridge parameter_bridge \
+    '/camera_left/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image' \
+    '/camera_left/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo' \
+    '/camera_right/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image' \
+    '/camera_right/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo' \
+    '/camera_top/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image' \
+    '/camera_top/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo'
+
+# TerminalDでカメラを確認
+export DISPLAY=:0
+ros2 run rqt_image_view rqt_image_view
+```
+
 ### 学習データ収集
 
 

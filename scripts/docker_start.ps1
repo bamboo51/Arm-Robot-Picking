@@ -21,7 +21,7 @@ docker run `
   -p 9090:9090 `
   -p 9876:9876 `
   -p 6080:80 `
-  -v "C:\crane-arm\src:/home/ubuntu/airobot_ws/src/user_code" `
+  -v "C:\Users\pongs\Documents\GitHub\Arm-Robot-Picking:/home/ubuntu/airobot_ws/src/user_code" `
   --shm-size=512m `
   --privileged `
   airobotbook/ros2-desktop-ai-robot-book-humble

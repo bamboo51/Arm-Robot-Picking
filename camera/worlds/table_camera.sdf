@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="ignition::gazebo::systems::Physics">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="ignition::gazebo::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="ignition::gazebo::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Sun
+      </uri>
+    </include>
+
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Ground%20Plane
+      </uri>
+    </include>
+
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Table
+      </uri>
+      <pose>0.29 0 0 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Wood%20cube%205cm
+      </uri>
+      <pose>0 -0.1 1.0 0 0 0</pose>
+    </include>
+
+    <!--Overhead camera-->
+    <model name="camera_top">
+      <static>true</static>
+      <!-- x y z roll pitch yaw, in world coordinates-->
+      <!-- Positive 90-degree pitch points the camera downward-->
+      <pose>0.25 0 1.80 0 1.5708 0</pose>
+
+      <link name="camera_link">
+        <sensor name="camera_sensor" type="camera">
+          <always_on>true</always_on>
+          <update_rate>10</update_rate>
+          <topic>/camera_top/image_raw</topic>
+
+          <camera>
+            <camera_info_topic>
+              /camera_top/camera_info
+            </camera_info_topic>
+
+            <horizontal_fov>1.047</horizontal_fov>
+
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+
+            <clip>
+              <near>0.05</near>
+              <far>10.0</far>
+            </clip>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+    <!-- Side cameras look inward and down toward the tabletop. -->
+    <model name="camera_left">
+      <static>true</static>
+      <pose>0.25 0.50 1.50 0 0.7854 -1.5708</pose>
+      <link name="camera_link">
+        <sensor name="camera_sensor" type="camera">
+          <always_on>true</always_on>
+          <update_rate>10</update_rate>
+          <topic>/camera_left/image_raw</topic>
+          <camera>
+            <camera_info_topic>/camera_left/camera_info</camera_info_topic>
+            <horizontal_fov>1.047</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.05</near>
+              <far>10.0</far>
+            </clip>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+
+    <model name="camera_right">
+      <static>true</static>
+      <pose>0.25 -0.50 1.50 0 0.7854 1.5708</pose>
+      <link name="camera_link">
+        <sensor name="camera_sensor" type="camera">
+          <always_on>true</always_on>
+          <update_rate>10</update_rate>
+          <topic>/camera_right/image_raw</topic>
+          <camera>
+            <camera_info_topic>/camera_right/camera_info</camera_info_topic>
+            <horizontal_fov>1.047</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.05</near>
+              <far>10.0</far>
+            </clip>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+  </world>
+</sdf>
