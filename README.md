@@ -46,6 +46,11 @@ export DISPLAY=:0
 ros2 run rqt_image_view rqt_image_view
 ```
 
+## ロボットの初期位置の確認コマンド
+```bash
+ros2 run tf2_ros tf2_echo world base_link
+```
+
 ### 学習データ収集
 
 
