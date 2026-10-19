@@ -49,6 +49,12 @@
       <pose>0 -0.1 1.0 0 0 0</pose>
     </include>
 
+    <include>
+      <uri>model://vehicle_blue</uri>
+      <name>placement_car</name>
+      <pose>0.10 0.10 1.00 0 0 0</pose>
+    </include>
+
     <!--Overhead camera-->
     <model name="camera_top">
       <static>true</static>

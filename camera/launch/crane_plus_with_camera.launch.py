@@ -26,9 +26,19 @@ from launch_ros.actions import SetParameter
 
 def generate_launch_description():
     # PATHを追加で通さないとSTLファイルが読み込まれない
+    project_root = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..")
+    )
+    resource_paths = [
+        os.path.join(project_root, "models"),
+        os.path.dirname(
+            get_package_share_directory("crane_plus_description")
+        ),
+        os.environ.get("IGN_GAZEBO_RESOURCE_PATH", ""),
+    ]
+
     env = {'IGN_GAZEBO_SYSTEM_PLUGIN_PATH': os.environ['LD_LIBRARY_PATH'],
-           'IGN_GAZEBO_RESOURCE_PATH': os.path.dirname(
-               get_package_share_directory('crane_plus_description'))}
+           'IGN_GAZEBO_RESOURCE_PATH':os.pathsep.join(path for path in resource_paths if path)}
     # world_file = os.path.join(
     #     get_package_share_directory('crane_plus_gazebo'), 'worlds', 'table.sdf')
     world_file = os.path.abspath(os.path.join(
