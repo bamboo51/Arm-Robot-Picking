@@ -190,12 +190,13 @@ int main(int argc, char ** argv)
   }
 
   // Fixed-scene estimates: recalibrate if the car, box, or grasp changes.
-  // The car: chassis: 5cm tall, center is 4cm above the car's origin -> chassis bottom = 0.04 - 0.025 = 0.015, chassis top = 0.04 + 0.0025 = 0.065
+  // The car: chassis: 5cm tall, center is 4cm above the car's origin -> chassis bottom = 0.04 - 0.025 = 0.015, chassis top = 0.04 + 0.025 = 0.065
   // In gazebo, top surface = 1.015 + 0.065 = 1.080
-  // In MoveIt (Movelt's zero is the robot based on the table) = 1.080 - 1.015 = 0.065
-  // Resting box sitting on the roof, its center is half a cube higher: 0.065 + 0.025 = 0.090
-  // Hand z = box center + 0.13 + 0.003 clearance = 0.090 + 0.13 + 0.003 = 0.223
-  const double release_z = 0.223;
+  // In MoveIt (MoveIt's zero is the robot base on the table) = 1.080 - 1.015 = 0.065
+  // The box origin is its bottom face (measured resting z = 1.015 = table top).
+  // At grasp: hand z 0.14, box bottom 0.000 -> hand is 0.14 above the box bottom.
+  // Hand z = car roof + 0.14 + 0.003 clearance = 0.065 + 0.14 + 0.003 = 0.208
+  const double release_z = 0.208;
   const double transfer_clearance = 0.01;
   // Lift once to the minimum transfer height, rather than lift and raise again.
   target_pose = move_group_arm.getCurrentPose().pose;
@@ -205,12 +206,10 @@ int main(int argc, char ** argv)
     return finish(1);
   }
 
-  // Desired resting box center in MoveIt's coordinates:
-  // (0.15, 0.10, 1.090 - 1.015) = (0.15, 0.10, 0.075)
+  // Desired resting box bottom in MoveIt's coordinates: (0.15, 0.10, 0.065)
   //
-  // Estimated end-effector minus box-center offset at grasp:
-  // (0, -0.09, 0.14) - (0, -0.10, 0.010)
-  // = (0, 0.01, 0.13)
+  // Estimated end-effector minus box-bottom offset at grasp:
+  // (0, -0.09, 0.14) - (0, -0.10, 0.000) = (0, 0.01, 0.14)
   //
   // Therefore estimated end-effector release position:
   // (0.15, 0.11, 0.205), plus 3 mm release clearance.

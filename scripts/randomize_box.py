@@ -19,8 +19,8 @@ def main():
     parser.add_argument("--ymin", type=float, default=-0.12)
     parser.add_argument("--ymax", type=float, default=-0.08)
 
-    # モデルの元々の高さ
-    parser.add_argument("--z", type=float, default=1.0)
+    # モデルの元々の高さ (原点は箱の底面、テーブル上面 = 1.015)
+    parser.add_argument("--z", type=float, default=1.015)
     args = parser.parse_args()
 
     if args.xmin > args.xmax or args.ymin > args.ymax:
