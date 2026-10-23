@@ -52,6 +52,10 @@ bool move_checked(MoveGroupInterface & group, const char * stage)
   return true;
 }
 
+double param(const rclcpp::Node::SharedPtr& node, const char* name){
+  return node->get_parameter(name).as_double();
+}
+
 bool cartesian_checked(
   MoveGroupInterface & group,
   const geometry_msgs::msg::Pose & goal,
@@ -102,6 +106,21 @@ int main(int argc, char ** argv)
   node_options.automatically_declare_parameters_from_overrides(true);
   auto move_group_arm_node = rclcpp::Node::make_shared("move_group_arm_node", node_options);
   auto move_group_gripper_node = rclcpp::Node::make_shared("move_group_gripper_node", node_options);
+
+  // Scene constants from config/scene.yaml (passed in by the launch file).
+  const double approach_z = param(move_group_arm_node, "approach_z");
+  const double grasp_z = param(move_group_arm_node, "grasp_z");
+  const double hand_offset_y = param(move_group_arm_node, "hand_offset_y");
+  const double release_clearance = param(move_group_arm_node, "release_clearance");
+  const double transfer_clearance = param(move_group_arm_node, "transfer_clearance");
+  const double car_roof_x = param(move_group_arm_node, "car_roof_x");
+  const double car_roof_y = param(move_group_arm_node, "car_roof_y");
+  const double car_roof_z = param(move_group_arm_node, "car_roof_z");
+
+  // hand sits hand_offset_y closer to the base than the box, along the radial line
+  const double roof_r = std::hypot(car_roof_x, car_roof_y);
+  const double target_x = car_roof_x * (roof_r - hand_offset_y) / roof_r;
+  const double target_y = car_roof_y * (roof_r - hand_offset_y) / roof_r;
 
   // For current state monitor
   rclcpp::executors::SingleThreadedExecutor executor;
@@ -161,7 +180,7 @@ int main(int argc, char ** argv)
   tf2::Quaternion q;
   target_pose.position.x = 0.0;
   target_pose.position.y = -0.09;
-  target_pose.position.z = 0.17;
+  target_pose.position.z = approach_z;
   q.setRPY(to_radians(0), to_radians(90), to_radians(-90));
   target_pose.orientation = tf2::toMsg(q);
   move_group_arm.setPoseTarget(target_pose);
@@ -176,7 +195,7 @@ int main(int argc, char ** argv)
     return finish(1);
   }
 
-  target_pose.position.z = 0.14;
+  target_pose.position.z = grasp_z;
   move_group_arm.setPoseTarget(target_pose);
   if (!move_checked(move_group_arm, "Descend to grasp")) {
     return finish(1);
@@ -189,30 +208,19 @@ int main(int argc, char ** argv)
     return finish(1);
   }
 
-  // Fixed-scene estimates: recalibrate if the car, box, or grasp changes.
-  // The car: chassis: 5cm tall, center is 4cm above the car's origin -> chassis bottom = 0.04 - 0.025 = 0.015, chassis top = 0.04 + 0.025 = 0.065
-  // In gazebo, top surface = 1.015 + 0.065 = 1.080
-  // In MoveIt (MoveIt's zero is the robot base on the table) = 1.080 - 1.015 = 0.065
-  // The box origin is its bottom face (measured resting z = 1.015 = table top).
-  // At grasp: hand z 0.14, box bottom 0.000 -> hand is 0.14 above the box bottom.
-  // Hand z = car roof + 0.14 + 0.003 clearance = 0.065 + 0.14 + 0.003 = 0.208
-  const double release_z = 0.208;
-  const double transfer_clearance = 0.01;
+  // The box origin is its bottom face, which rests at MoveIt z = 0 on the table.
+  // So at grasp the hand is grasp_z above the box bottom, and releasing onto the
+  // car roof needs the hand at roof + grasp_z (+ clearance). Default: 0.168.
+  const double release_z = car_roof_z + grasp_z + release_clearance;
   // Lift once to the minimum transfer height, rather than lift and raise again.
   target_pose = move_group_arm.getCurrentPose().pose;
   target_pose.position.z = std::max(
-    target_pose.position.z, std::max(0.17, release_z + transfer_clearance));
+    target_pose.position.z, std::max(approach_z, release_z + transfer_clearance));
   if (!cartesian_checked(move_group_arm, target_pose, "Lift to transfer height")) {
     return finish(1);
   }
 
-  // Desired resting box bottom in MoveIt's coordinates: (0.15, 0.10, 0.065)
-  //
-  // Estimated end-effector minus box-bottom offset at grasp:
-  // (0, -0.09, 0.14) - (0, -0.10, 0.000) = (0, 0.01, 0.14)
-  //
-  // Therefore estimated end-effector release position:
-  // (0.15, 0.11, 0.205), plus 3 mm release clearance.
+  // Hand above the car roof center, shifted by the grasp's hand-to-box y offset.
   // Change only x/y: maintain the measured hand height and orientation.
   geometry_msgs::msg::Pose place_pose = move_group_arm.getCurrentPose().pose;
   const double transfer_z = place_pose.position.z;
@@ -220,9 +228,26 @@ int main(int argc, char ** argv)
     RCLCPP_ERROR(LOGGER, "Hand is below the estimated release height; stopping.");
     return finish(1);
   }
-  place_pose.position.x = 0.15;
-  place_pose.position.y = 0.11;
-  if (!cartesian_checked(move_group_arm, place_pose, "Level transfer above car")) {
+  // turn the base toward the car
+  const auto hand = move_group_arm.getCurrentPose().pose;
+  const double turn = std::atan2(target_y, target_x) - std::atan2(hand.position.y, hand.position.x);
+  auto joints = move_group_arm.getCurrentJointValues();
+  joints[0] += turn;
+  move_group_arm.setJointValueTarget(joints);
+  if(!move_checked(move_group_arm, "Turn toward car")){
+    return finish(1);
+  }
+
+  // Slide along the hand's actual direction to the target radius. A sideways move
+  // with fixed orientation is impossible for this 4-DOF arm, so stay radial.
+  place_pose = move_group_arm.getCurrentPose().pose;
+  const double hand_r = std::hypot(place_pose.position.x, place_pose.position.y);
+  const double target_r = std::hypot(target_x, target_y);
+  place_pose.position.x *= target_r / hand_r;
+  place_pose.position.y *= target_r / hand_r;
+  if (std::abs(target_r - hand_r) > 0.002 &&
+    !cartesian_checked(move_group_arm, place_pose, "Reach out above car"))
+  {
     return finish(1);
   }
 
@@ -243,6 +268,17 @@ int main(int argc, char ** argv)
   // Retreat upward.
   place_pose.position.z = transfer_z;
   if (!cartesian_checked(move_group_arm, place_pose, "Retreat from car")) {
+    return finish(1);
+  }
+
+  // Return to the initial pose.
+  move_group_arm.setNamedTarget("home");
+  if(!move_checked(move_group_arm, "Return to home")){
+    return finish(1);
+  }
+  gripper_joint_values[0] = GRIPPER_DEFAULT;
+  move_group_gripper.setJointValueTarget(gripper_joint_values);
+  if(!move_checked(move_group_gripper, "Reset gripper")){
     return finish(1);
   }
   return finish(0);

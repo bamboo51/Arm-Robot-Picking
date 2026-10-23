@@ -5,22 +5,30 @@ import random
 import re
 import subprocess
 import time
+import yaml
+
+SCENE_FILE = Path(__file__).resolve().parents[1] / "config" / "scene.yaml"
+
 
 def main():
+    scene = yaml.safe_load(SCENE_FILE.read_text(encoding="utf-8"))
+    box = scene["box"]
+    bounds = box["sampling_bounds"]
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--episode", required=True)
     parser.add_argument("--world", default="default")
-    parser.add_argument("--model", default="pick_box")
+    parser.add_argument("--model", default=box["name"])
 
-    # はじめての最初位置（元々Boxが置かれたところより少し変えたもの）
-    parser.add_argument("--xmin", type=float, default=-0.02)
-    parser.add_argument("--xmax", type=float, default=0.02)
-    parser.add_argument("--ymin", type=float, default=-0.12)
-    parser.add_argument("--ymax", type=float, default=-0.08)
+    # はじめての最初位置（デフォルトは config/scene.yaml から）
+    parser.add_argument("--xmin", type=float, default=bounds["xmin"])
+    parser.add_argument("--xmax", type=float, default=bounds["xmax"])
+    parser.add_argument("--ymin", type=float, default=bounds["ymin"])
+    parser.add_argument("--ymax", type=float, default=bounds["ymax"])
 
     # モデルの元々の高さ (原点は箱の底面、テーブル上面 = 1.015)
-    parser.add_argument("--z", type=float, default=1.015)
+    parser.add_argument("--z", type=float, default=box["spawn_z"])
     args = parser.parse_args()
 
     if args.xmin > args.xmax or args.ymin > args.ymax:
