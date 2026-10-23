@@ -4,7 +4,10 @@
 # Keep in sync with camera/worlds/table_camera.sdf.
 
 table:
-  top_z: 1.015            # Gazebo z of the table surface (robot spawned here)
+  top_z: 1.015            # Gazebo z of the table surface
+
+robot:
+  base_z: 1.015           # Gazebo z where crane_plus is spawned (keep in sync with -z in the camera launch)
 
 box:
   name: pick_box
@@ -29,6 +32,14 @@ grasp:
   hand_offset_y: 0.01     # hand y minus box y at grasp
   release_clearance: 0.003
   transfer_clearance: 0.005   # keep transfer height <= ~0.175 (arm reach limit)
+
+sampling:                 # where randomized objects may be placed (MoveIt frame, polar around the base)
+  margin: 0.01            # keep this far inside the computed reachable r range
+  base_clearance: 0.08    # objects closer than this would hit the robot body
+  theta_range: [-130, 130]  # degrees; joint1 is +-150, never sample behind the robot
+  # r ranges below: paste from `python scripts/reachability.py`
+  box_r: [0.080, 0.124]
+  car_r: [0.080, 0.124]
 
 success:
   xy_tolerance: 0.03      # box must end within this distance of car.roof_center
