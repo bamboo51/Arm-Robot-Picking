@@ -8,6 +8,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from typing import Any
+import json
 
 def without_nulls(value):
     if isinstance(value, dict):
@@ -53,14 +54,27 @@ def generate_launch_description():
     scene = yaml.safe_load(scene_file().read_text(encoding="utf-8"))
     grasp = scene["grasp"]
     car = scene["car"]
+    box_x, box_y = scene["box"]["xy"]
+    roof_x, roof_y = car["roof_center"]
+
+    # EPISODE=<name> uses the randomized poses frm datasets/<name>/initial_pose.json
+    episode = os.environ.get("EPISODE")
+    if episode:
+        pose_file = scene_file().parents[1] / "datasets" / episode / "initial_pose.json"
+        s = json.loads(pose_file.read_text(encoding="utf-8"))["scene"]
+        box_x, box_y = s["box"]["x"], s["box"]["y"]
+        roof_x, roof_y = s["car"]["roof_x"], s["car"]["roof_y"]
+
     parameters.update({
         "approach_z": float(grasp["approach_z"]),
         "grasp_z": float(grasp["grasp_z"]),
         "hand_offset_y": float(grasp["hand_offset_y"]),
         "release_clearance": float(grasp["release_clearance"]),
         "transfer_clearance": float(grasp["transfer_clearance"]),
-        "car_roof_x": float(car["roof_center"][0]),
-        "car_roof_y": float(car["roof_center"][1]),
+        "box_x": float(box_x),
+        "box_y": float(box_y),
+        "car_roof_x": float(roof_x),
+        "car_roof_y": float(roof_y),
         "car_roof_z": float(car["roof_z"])
     })
 

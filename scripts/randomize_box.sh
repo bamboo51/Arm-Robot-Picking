@@ -31,8 +31,7 @@ count=$((10#$count))
 interval=$((10#$interval))
 
 if ! command -v ign >/dev/null 2>&1; then
-  echo "ign not found. Run this script inside the Gazebo Docker container." >&2
-  exit 1
+  echo "Warning: ign not found. Saving sampled scenes only; Gazebo will not be moved." >&2
 fi
 
 trap 'echo "Stopped randomizing."; exit 130' INT

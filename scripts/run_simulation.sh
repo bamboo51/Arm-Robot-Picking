@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run inside the ROS Docker container. Stop with Ctrl+C.
+export IGN_GAZEBO_RESOURCE_PATH=~/airobot_ws/src/user_code/models:$IGN_GAZEBO_RESOURCE_PATH
 set -eo pipefail
 
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,7 +23,7 @@ export DISPLAY="${DISPLAY:-:0}"
 # Override with LIBGL_ALWAYS_SOFTWARE=0 to use hardware rendering.
 export LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}"
 export QT_X11_NO_MITSHM="${QT_X11_NO_MITSHM:-1}"
-
+export CAMERAS="${CAMERAS:-1}"
 pids=()
 cleanup() {
   trap - EXIT INT TERM
@@ -52,16 +53,19 @@ echo "Desktop: http://localhost:6080 | Stop: Ctrl+C"
 setsid ros2 launch \
   "$project_root/camera/launch/crane_plus_with_camera.launch.py" &
 pids+=("$!")
-
-bridge_args=()
-for camera in top left right; do
-  bridge_args+=(
-    "/camera_${camera}/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image"
-    "/camera_${camera}/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo"
-  )
-done
-setsid ros2 run ros_gz_bridge parameter_bridge "${bridge_args[@]}" &
-pids+=("$!")
+if [[ "$CAMERAS" == 1 ]]; then
+  bridge_args=()
+  for camera in top left right; do
+    bridge_args+=(
+      "/camera_${camera}/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image"
+      "/camera_${camera}/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo"
+    )
+  done
+  setsid ros2 run ros_gz_bridge parameter_bridge "${bridge_args[@]}" &
+  pids+=("$!")
+else
+  echo "Camera is set to off"
+fi
 
 # If either launcher exits, shut down the companion process too.
 set +e

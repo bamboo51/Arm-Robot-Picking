@@ -77,8 +77,8 @@
             <horizontal_fov>1.047</horizontal_fov>
 
             <image>
-              <width>640</width>
-              <height>480</height>
+              <width>320</width>
+              <height>240</height>
               <format>R8G8B8</format>
             </image>
 
@@ -103,8 +103,8 @@
             <camera_info_topic>/camera_left/camera_info</camera_info_topic>
             <horizontal_fov>1.047</horizontal_fov>
             <image>
-              <width>640</width>
-              <height>480</height>
+              <width>320</width>
+              <height>240</height>
               <format>R8G8B8</format>
             </image>
             <clip>
@@ -128,8 +128,8 @@
             <camera_info_topic>/camera_right/camera_info</camera_info_topic>
             <horizontal_fov>1.047</horizontal_fov>
             <image>
-              <width>640</width>
-              <height>480</height>
+              <width>320</width>
+              <height>240</height>
               <format>R8G8B8</format>
             </image>
             <clip>
