@@ -34,6 +34,9 @@ using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("pick_and_place");
 
+// fraction of the joint velocity/acceleration limits for every motion
+constexpr double SPEED = 0.5;
+
 double to_radians(const double deg_angle)
 {
   return deg_angle * M_PI / 180.0;
@@ -50,6 +53,13 @@ bool move_checked(MoveGroupInterface & group, const char * stage)
 
   RCLCPP_INFO(LOGGER, "%s completed.", stage);
   return true;
+}
+
+bool move_joint(MoveGroupInterface& group, size_t index, double value, const char* stage){
+  auto joints = group.getCurrentJointValues();
+  joints[index] = value;
+  group.setJointValueTarget(joints);
+  return move_checked(group, stage);
 }
 
 double param(const rclcpp::Node::SharedPtr& node, const char* name){
@@ -144,15 +154,15 @@ int main(int argc, char ** argv)
     };
 
   MoveGroupInterface move_group_arm(move_group_arm_node, "arm");
-  move_group_arm.setMaxVelocityScalingFactor(0.2);
-  move_group_arm.setMaxAccelerationScalingFactor(0.2);
+  move_group_arm.setMaxVelocityScalingFactor(SPEED);
+  move_group_arm.setMaxAccelerationScalingFactor(SPEED);
 
   RCLCPP_INFO(LOGGER, "Planning frame: %s", move_group_arm.getPlanningFrame().c_str());
   RCLCPP_INFO(LOGGER, "End-effector link: %s", move_group_arm.getEndEffectorLink().c_str());
 
   MoveGroupInterface move_group_gripper(move_group_gripper_node, "gripper");
-  move_group_gripper.setMaxVelocityScalingFactor(0.2);
-  move_group_gripper.setMaxAccelerationScalingFactor(0.2);
+  move_group_gripper.setMaxVelocityScalingFactor(SPEED);
+  move_group_gripper.setMaxAccelerationScalingFactor(SPEED);
   auto gripper_joint_values = move_group_gripper.getCurrentJointValues();
   if (gripper_joint_values.empty()) {
     RCLCPP_ERROR(LOGGER, "No gripper joint state available; stopping episode.");
@@ -261,10 +271,10 @@ int main(int argc, char ** argv)
   }
 
   // Lower to the release position.
-  place_pose.position.z = release_z;
-  if (!cartesian_checked(move_group_arm, place_pose, "Lower onto car")) {
-    return finish(1);
-  }
+  // place_pose.position.z = release_z;
+  // if (!cartesian_checked(move_group_arm, place_pose, "Lower onto car")) {
+  //   return finish(1);
+  // }
 
   // Release.
   gripper_joint_values[0] = GRIPPER_OPEN;
@@ -280,12 +290,16 @@ int main(int argc, char ** argv)
     return finish(1);
   }
 
-  // Return to the initial pose.
-  move_group_arm.setNamedTarget("home");
-  if(!move_checked(move_group_arm, "Return to home")){
-    return finish(1);
+  // Unfold one joint at a time (wrist -> elbow -> shoulder -> base) so the hand
+  // only moves up and away from the car instead of sweeping across it.
+  const auto vertical = move_group_arm.getNamedTargetValues("vertical");
+  const auto names = move_group_arm.getJointNames();
+  const char * stages[] = {"Unfold joint 1", "Unfold joint 2", "Unfold joint 3", "Unfold joint 4"};
+  for (int i = 3; i >= 0; --i) {
+    if (!move_joint(move_group_arm, i, vertical.at(names[i]), stages[i])) {
+      return finish(1);
+    }
   }
-  gripper_joint_values[0] = GRIPPER_DEFAULT;
   move_group_gripper.setJointValueTarget(gripper_joint_values);
   if(!move_checked(move_group_gripper, "Reset gripper")){
     return finish(1);

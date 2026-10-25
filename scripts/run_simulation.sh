@@ -53,7 +53,7 @@ echo "Desktop: http://localhost:6080 | Stop: Ctrl+C"
 setsid ros2 launch \
   "$project_root/camera/launch/crane_plus_with_camera.launch.py" &
 pids+=("$!")
-if [["$CAMERAS"==1]]; then
+if [[ "$CAMERAS" == 1 ]]; then
   bridge_args=()
   for camera in top left right; do
     bridge_args+=(
