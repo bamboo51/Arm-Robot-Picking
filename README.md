@@ -58,6 +58,19 @@ ros2 run rqt_image_view rqt_image_view
 ros2 run tf2_ros tf2_echo world base_link
 ```
 
+## 世界のモデルの位置をチェック
+```bash
+ign model --list
+
+# pose of one model
+ign model -m placement_car -p
+ign model -m pick_box -p
+
+# pose of all model
+for m in $(ign model --list | grep -- '- ' | sed 's/.*- //'); do
+  echo "== $m"; ign model -m "$m" -p | sed -n '/Pose/,+2p'
+done
+```
 ### 学習データ収集
 
 

@@ -14,17 +14,13 @@ box:
   size: 0.05              # cube edge length
   origin: bottom          # model origin is the bottom face (measured resting z = 1.015)
   spawn_z: 1.015          # Gazebo z
-  sampling_bounds:        # x/y in both frames
-    xmin: -0.02
-    xmax: 0.02
-    ymin: -0.12
-    ymax: -0.08
 
 car:
   name: placement_car
   pose: [0.05, 0.00, 1.015]   # Gazebo model origin (wheel bottoms)
   roof_center: [0.10, 0.00]   # chassis is offset +0.05 in x from the origin
   roof_z: 0.025               # MoveIt z of the chassis top (small car)
+  roof_offset: 0.05           # roof center offset along the car's x axis (model.sdf chassis pose)
 
 grasp:
   approach_z: 0.17        # MoveIt z of the hand above the box
@@ -40,6 +36,8 @@ sampling:                 # where randomized objects may be placed (MoveIt frame
   # r ranges below: paste from `python scripts/reachability.py`
   box_r: [0.080, 0.124]
   car_r: [0.080, 0.124]
+  min_gap: 0.11           # box center to car roof center: box half-diagonal 0.035 + car half-length 0.07
+  min_angle: 60           # degrees between box and car around the base (tuned by eye, not measured)
 
 success:
   xy_tolerance: 0.03      # box must end within this distance of car.roof_center
