@@ -14,6 +14,7 @@ box:
   size: 0.05              # cube edge length
   origin: bottom          # model origin is the bottom face (measured resting z = 1.015)
   spawn_z: 1.015          # Gazebo z
+  xy: [0.0, -0.10]        # MoveIt x/y of the default box
 
 car:
   name: placement_car

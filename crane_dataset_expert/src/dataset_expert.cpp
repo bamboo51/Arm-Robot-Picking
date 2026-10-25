@@ -116,11 +116,20 @@ int main(int argc, char ** argv)
   const double car_roof_x = param(move_group_arm_node, "car_roof_x");
   const double car_roof_y = param(move_group_arm_node, "car_roof_y");
   const double car_roof_z = param(move_group_arm_node, "car_roof_z");
+  const double box_x = param(move_group_arm_node, "box_x");
+  const double box_y = param(move_group_arm_node, "box_y");
 
   // hand sits hand_offset_y closer to the base than the box, along the radial line
   const double roof_r = std::hypot(car_roof_x, car_roof_y);
   const double target_x = car_roof_x * (roof_r - hand_offset_y) / roof_r;
   const double target_y = car_roof_y * (roof_r - hand_offset_y) / roof_r;
+
+  // same radical as the car, with the box
+  const double box_r = std::hypot(box_x, box_y);
+  const double pick_x = box_x * (box_r - hand_offset_y) / box_r;
+  const double pick_y = box_y * (box_r - hand_offset_y) / box_r;
+  // A 4-DOF arm can only point radially, so the hand yaw is the box's polar angle
+  const double pick_yaw = std::atan2(pick_y, pick_x);
 
   // For current state monitor
   rclcpp::executors::SingleThreadedExecutor executor;
@@ -178,17 +187,17 @@ int main(int argc, char ** argv)
 
   geometry_msgs::msg::Pose target_pose;
   tf2::Quaternion q;
-  target_pose.position.x = 0.0;
-  target_pose.position.y = -0.09;
+  target_pose.position.x = pick_x;
+  target_pose.position.y = pick_y;
   target_pose.position.z = approach_z;
-  q.setRPY(to_radians(0), to_radians(90), to_radians(-90));
+  q.setRPY(to_radians(0), to_radians(90), pick_yaw);
   target_pose.orientation = tf2::toMsg(q);
   move_group_arm.setPoseTarget(target_pose);
   if (!move_checked(move_group_arm, "Approach box")) {
     return finish(1);
   }
 
-  q.setRPY(to_radians(0), to_radians(180), to_radians(-90));
+  q.setRPY(to_radians(0), to_radians(180), pick_yaw);
   target_pose.orientation = tf2::toMsg(q);
   move_group_arm.setPoseTarget(target_pose);
   if (!move_checked(move_group_arm, "Orient gripper for grasp")) {

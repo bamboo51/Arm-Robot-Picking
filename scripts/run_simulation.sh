@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run inside the ROS Docker container. Stop with Ctrl+C.
+export IGN_GAZEBO_RESOURCE_PATH=~/airobot_ws/src/user_code/models:$IGN_GAZEBO_RESOURCE_PATH
 set -eo pipefail
 
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
