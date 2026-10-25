@@ -1,0 +1,45 @@
+# Single source of scene constants.
+# Gazebo world frame: origin on the floor.
+# MoveIt "world" frame: origin at the robot base (z_moveit = z_gazebo - table.top_z).
+# Keep in sync with camera/worlds/table_camera.sdf.
+
+table:
+  top_z: 1.015            # Gazebo z of the table surface
+
+robot:
+  base_z: 1.015           # Gazebo z where crane_plus is spawned (keep in sync with -z in the camera launch)
+
+box:
+  name: pick_box
+  size: 0.05              # cube edge length
+  origin: bottom          # model origin is the bottom face (measured resting z = 1.015)
+  spawn_z: 1.015          # Gazebo z
+  xy: [0.0, -0.10]        # MoveIt x/y of the default box
+
+car:
+  name: placement_car
+  pose: [0.05, 0.00, 1.015]   # Gazebo model origin (wheel bottoms)
+  roof_center: [0.10, 0.00]   # chassis is offset +0.05 in x from the origin
+  roof_z: 0.025               # MoveIt z of the chassis top (small car)
+  roof_offset: 0.05           # roof center offset along the car's x axis (model.sdf chassis pose)
+
+grasp:
+  approach_z: 0.17        # MoveIt z of the hand above the box
+  grasp_z: 0.14           # MoveIt z of the hand when closing
+  hand_offset_y: 0.01     # hand y minus box y at grasp
+  release_clearance: 0.003
+  transfer_clearance: 0.005   # keep transfer height <= ~0.175 (arm reach limit)
+
+sampling:                 # where randomized objects may be placed (MoveIt frame, polar around the base)
+  margin: 0.01            # keep this far inside the computed reachable r range
+  base_clearance: 0.08    # objects closer than this would hit the robot body
+  theta_range: [-130, 130]  # degrees; joint1 is +-150, never sample behind the robot
+  # r ranges below: paste from `python scripts/reachability.py`
+  box_r: [0.080, 0.124]
+  car_r: [0.080, 0.124]
+  min_gap: 0.11           # box center to car roof center: box half-diagonal 0.035 + car half-length 0.07
+  min_angle: 60           # degrees between box and car around the base (tuned by eye, not measured)
+
+success:
+  xy_tolerance: 0.03      # box must end within this distance of car.roof_center
+  z_tolerance: 0.01       # box bottom must be within this of car.roof_z
