@@ -138,13 +138,14 @@ done
 ```
 
 ## 参考文献
-[1] https://skinny-chord-c58.notion.site/5-ROS-2-2-2-2049a7a1061380fc8928e500eafc57d0
-[2] matsuolab/pai_training: https://github.com/matsuolab/pai_training （講義の学習パイプライン．関節角のみの ACT）
-[3] LeRobot: https://github.com/huggingface/lerobot
-[4] Zhao et al., "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware" (ACT), RSS 2023.
-[5] Shukor et al., "SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics", 2025.
-[6] Chi et al., "Diffusion Policy: Visuomotor Policy Learning via Action Diffusion", RSS 2023.
-[7] Mandlekar et al., "What Matters in Learning from Offline Human Demonstrations for Robot Manipulation", CoRL 2021.
-[8] de Haan et al., "Causal Confusion in Imitation Learning", NeurIPS 2019.
-[9] Wen et al., "Fighting Copycat Agents in Behavioral Cloning from Observation Histories", NeurIPS 2020.
-[10] Ross et al., "A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning" (DAgger), AISTATS 2011.
+
+1. [ROS 2 講義資料](https://skinny-chord-c58.notion.site/5-ROS-2-2-2-2049a7a1061380fc8928e500eafc57d0)
+2. [matsuolab/pai_training](https://github.com/matsuolab/pai_training) — 講義の学習パイプライン．関節角のみの ACT．
+3. [LeRobot](https://github.com/huggingface/lerobot)
+4. Zhao et al., "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware," RSS 2023.
+5. Shukor et al., "SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics," 2025.
+6. Chi et al., "Diffusion Policy: Visuomotor Policy Learning via Action Diffusion," RSS 2023.
+7. Mandlekar et al., "What Matters in Learning from Offline Human Demonstrations for Robot Manipulation," CoRL 2021.
+8. de Haan et al., "Causal Confusion in Imitation Learning," NeurIPS 2019.
+9. Wen et al., "Fighting Copycat Agents in Behavioral Cloning from Observation Histories," NeurIPS 2020.
+10. Ross et al., "A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning," AISTATS 2011.
