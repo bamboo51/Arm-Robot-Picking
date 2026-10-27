@@ -1,0 +1,20 @@
+[project]
+name = "learning"
+version = "0.1.0"
+requires-python = ">=3.13, <3.14"
+dependencies = [
+    "lerobot[dataset,training,smolvla]>=0.6.1",
+    "nvidia-cudnn-cu12==9.10.2.21",
+    "torch",
+    "torchvision",
+    "pyzmq",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true   # only torch/torchvision come from here; everything else from PyPI

@@ -15,7 +15,7 @@ docker run `
   -e "https_proxy=$proxyUrl" `
   -e "NO_PROXY=localhost,127.0.0.1,::1" `
   -e "no_proxy=localhost,127.0.0.1,::1" `
-  --name pai_ros2 `
+  --name custom-crane `
   -p 15900:5900 `
   -p 13389:3389 `
   -p 9090:9090 `
