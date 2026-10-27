@@ -6,3 +6,15 @@ __pycache__/
 *.pyc
 .venv/
 .vscode/
+
+# images
+*.jpg
+*.png
+
+# dataset
+datasets/
+fuel_cache/
+lerobot_data/
+
+# checkpoint
+learning/checkpoints/

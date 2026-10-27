@@ -1,0 +1,4 @@
+# Only send what the Dockerfile copies (datasets/ alone is ~17 GB).
+*
+!learning/pyproject.toml
+!learning/uv.lock
