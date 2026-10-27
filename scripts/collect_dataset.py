@@ -6,7 +6,7 @@ import subprocess
 import time
 import shutil
 from pathlib import Path
-from sim_utils import DATASET_DIR, load_scene, place_scene
+from sim_utils import DATASET_DIR, load_scene, place_scene, read_pose
 
 # No /clock: ~1 kHz of tiny messages overflows the writer; message stamps suffice.
 TOPICS = [
@@ -15,6 +15,17 @@ TOPICS = [
 ]
 # Record on the container's own disk; the bind-mounted repo is too slow for raw images.
 LOCAL = Path.home() / "bags_temp"
+XY_TOL, Z_TOL = 0.03, 0.01  # m; box center vs roof center, box bottom vs roof top
+
+def box_on_roof(ep_dir, cfg) -> dict:
+    """Read the final box pose from Gazebo and check it rests on the car roof."""
+    roof = json.loads((ep_dir / "initial_pose.json").read_text(encoding="utf-8"))["scene"]["car"]
+    time.sleep(1.0)  # let the dropped box settle
+    x, y, z = read_pose(cfg["box"]["name"])
+    roof_z = cfg["box"]["spawn_z"] + cfg["car"]["roof_z"]  # Gazebo z of the roof top
+    xy_err = ((x - roof["roof_x"]) ** 2 + (y - roof["roof_y"]) ** 2) ** 0.5
+    return {"success": xy_err < XY_TOL and abs(z - roof_z) < Z_TOL,
+            "final_box": {"x": x, "y": y, "z": z}, "xy_err": xy_err}
 
 def record_episode(ep_dir, cfg) -> int:
     s = json.loads((ep_dir / "initial_pose.json").read_text(encoding="utf-8"))["scene"]
@@ -57,7 +68,7 @@ def main():
 
         print(f"== {ep_dir.name} ==")
         code = record_episode(ep_dir, cfg)
-        result.write_text(json.dumps({"expert_exit": code}))
+        result.write_text(json.dumps({"expert_exit": code, **box_on_roof(ep_dir, cfg)}))
 
 if __name__ == "__main__":
     main()
