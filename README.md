@@ -8,6 +8,24 @@
 ./scripts/docker_start.ps1
 ```
 
+### mcap入りのイメージを作る（データ収集用）
+`ros2 bag record -s mcap` を使うため，元のイメージに `ros-humble-rosbag2-storage-mcap` を追加したイメージを一度だけビルドします．学校のネットワークでない場合は `--build-arg` の2行を外してください．
+```powershell
+docker build -t crane-arm:humble `
+  --build-arg HTTP_PROXY=http://wproxy.net.sendai-nct.ac.jp:8080 `
+  --build-arg HTTPS_PROXY=http://wproxy.net.sendai-nct.ac.jp:8080 `
+  docker
+```
+起動スクリプトの最後の行のイメージ名 `airobotbook/ros2-desktop-ai-robot-book-humble` を `crane-arm:humble` に変えます．同じ名前のコンテナが既にある場合は，先に削除してから起動します（リポジトリはマウントなので消えません．起動後に `colcon build` をやり直してください）．
+```powershell
+docker rm -f pai_ros2_gpu
+./scripts/docker_start2.ps1
+```
+コンテナ内で確認します（Ctrl+Cで止めて，エラーが出なければOK）．
+```bash
+ros2 bag record -s mcap -o /tmp/mcap_test /joint_states
+```
+
 使うTerminalは，必ずWindowsのTerminalを使ってください．VSCode内で実装すると，Gazeboがうまく出力できない可能性があります．
 次は，DockerのTerminalを開きます．
 ```bash
@@ -70,6 +88,18 @@ ign model -m pick_box -p
 for m in $(ign model --list | grep -- '- ' | sed 's/.*- //'); do
   echo "== $m"; ign model -m "$m" -p | sed -n '/Pose/,+2p'
 done
+```
+
+## DataExpertの実装について
+```bash
+# ビルド
+cd ~/airobot_ws
+colcon build --symlink-install --packages-select crane_dataset_expert
+source install/setup.bash
+
+# 実装
+ros2 launch crane_dataset_expert dataset_expert.launch.py                      # default pose
+EPISODE=ep_000001 ros2 launch crane_dataset_expert dataset_expert.launch.py    # randomized
 ```
 ### 学習データ収集
 
