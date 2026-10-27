@@ -11,6 +11,9 @@ lerobot-train                                          ACT / SmolVLA を学習
 learning/policy_server.py + scripts/infer_node.py      Gazebo で推論
 ```
 
+こちらはデータセットのサンプル画像である．
+<a href="https://www.youtube.com/watch?v=eJNVznWTzlk">Dataset</a>
+
 ## 1. Docker イメージとコンテナ
 筆者は学校のネットワーク（Proxy あり）で開発したため，Proxy と GPU を設定したスクリプトを使います．学校のネットワークでない場合は `--build-arg` の2行と `docker_start.ps1` の Proxy 設定を外してください．
 
