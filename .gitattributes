@@ -1,7 +1,1 @@
-*.sh   text eol=lf
-*.py   text eol=lf
-*.yaml text eol=lf
-*.sdf  text eol=lf
-*.cpp  text eol=lf
-*.txt  text eol=lf
-*.xml  text eol=lf
+* text=auto eol=lf
