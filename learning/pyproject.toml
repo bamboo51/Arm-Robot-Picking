@@ -3,9 +3,11 @@ name = "learning"
 version = "0.1.0"
 requires-python = ">=3.13, <3.14"
 dependencies = [
-    "lerobot[dataset,training]>=0.6.1",
+    "lerobot[dataset,training,smolvla]>=0.6.1",
+    "nvidia-cudnn-cu12==9.10.2.21",
     "torch",
     "torchvision",
+    "pyzmq",
 ]
 
 [tool.uv.sources]
