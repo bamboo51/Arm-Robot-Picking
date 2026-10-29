@@ -12,19 +12,19 @@ learning/policy_server.py + scripts/infer_node.py      Gazebo で推論
 ```
 
 ## 1. Docker イメージとコンテナ
-筆者は学校のネットワーク（Proxy あり）で開発したため，Proxy と GPU を設定したスクリプトを使います．学校のネットワークでない場合は `--build-arg` の2行と `docker_start.ps1` の Proxy 設定を外してください．
+Proxy は `.env` の `PROXY_URL` から読みます．`.env.example` を `.env` にコピーし，Proxy が必要なネットワークではその URL を，不要なら空のままにします（`.env` は git に含めません）．ネットワークを変えたら `.env` を書き換え，コンテナを作り直してください．Docker Desktop 自体のイメージ取得には Settings → Resources → Proxies の設定が使われます．
+```powershell
+Copy-Item .env.example .env
+```
 
 イメージには，元のイメージに加えて次のものが入ります．
 - `ros-humble-rosbag2-storage-mcap`（録画用）
 - `/opt/lerobot-venv`：`learning/uv.lock` どおりの LeRobot 0.6.1 環境（Python 3.13，`policy_server.py` 専用）．ROS Humble は Python 3.10 のため，LeRobot（3.12 以上が必要）とは別の Python にしています．
 - `pyzmq`（システムの Python 3.10，`infer_node.py` 用）
 
-ビルドはリポジトリのルートで行います（`.dockerignore` で `learning/pyproject.toml` と `learning/uv.lock` だけを送ります）．
+ビルドはリポジトリのルートを context にして行います（`.dockerignore` で `learning/pyproject.toml` と `learning/uv.lock` だけを送ります）．
 ```powershell
-docker build -t crane-arm:humble -f docker/Dockerfile `
-  --build-arg HTTP_PROXY=http://wproxy.net.sendai-nct.ac.jp:8080 `
-  --build-arg HTTPS_PROXY=http://wproxy.net.sendai-nct.ac.jp:8080 `
-  .
+./scripts/docker_build.ps1
 ```
 同じ名前のコンテナが既にある場合は，先に削除してから起動します（リポジトリはマウントなので消えません．起動後に `colcon build` をやり直してください）．
 ```powershell
