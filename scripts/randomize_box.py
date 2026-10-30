@@ -23,16 +23,14 @@ def sample_scene(rng: random.Random, sampling: dict, roof_offset: float) -> dict
             "car": {"roof_x": 0.10, "roof_y": 0.0, "x": 0.10, "y": -0.05, "yaw": 1.57}
         }
     """
-    theta_min, theta_max = sampling["theta_range"]
-
     # box: yaw = theta so its faces line up with the fingers
     box_r = rng.uniform(*sampling["box_r"])
-    box_theta = math.radians(rng.uniform(theta_min, theta_max))
+    box_theta = math.radians(rng.uniform(*sampling["box_theta"]))
     box_x, box_y = polar_to_xy(box_r, box_theta)
 
     # car: own angle; long side along the circle, so yaw = theta + 90 deg
     roof_r = rng.uniform(*sampling["car_r"])
-    roof_theta = math.radians(rng.uniform(theta_min, theta_max))
+    roof_theta = math.radians(rng.uniform(*sampling["car_theta"]))
     roof_x, roof_y = polar_to_xy(roof_r, roof_theta)
     car_yaw = roof_theta + math.pi / 2
     # The roof center sits roof_offset along the car's own x axis from its origin.
@@ -44,30 +42,21 @@ def sample_scene(rng: random.Random, sampling: dict, roof_offset: float) -> dict
         "car": {"roof_x": roof_x, "roof_y": roof_y, "x": car_x, "y": car_y, "yaw": car_yaw},
     }
 
-def scene_ok(s: dict, min_gap: float, min_angle: float) -> bool:
-    """False if the box is too close to the car roof, or the two are too close in angle.
-
-    min_gap in meters, min_angle in degrees.
-    """
+def scene_ok(s: dict, min_gap: float) -> bool:
+    """False if the box is too close to the car roof (min_gap in meters).
+    Box and car are on opposite sides (box_theta / car_theta), so their angles never clash."""
     box, car = s["box"], s["car"]
-    if math.hypot(box["x"] - car["roof_x"], box["y"] - car["roof_y"]) < min_gap:
-        return False
-
-    box_angle = math.degrees(math.atan2(box["y"], box["x"]))
-    car_angle = math.degrees(math.atan2(car["roof_y"], car["roof_x"]))
-    # Wrap into [-180, 180) so -170 vs +170 counts as 20 degrees apart, not 340.
-    diff = (box_angle - car_angle + 180) % 360 - 180
-    return abs(diff) >= min_angle
+    return math.hypot(box["x"] - car["roof_x"], box["y"] - car["roof_y"]) >= min_gap
 
 def sample_valid_scene(rng: random.Random, sampling: dict, roof_offset: float, max_tries: int = 100) -> dict:
 
     for _ in range(max_tries):
         scene = sample_scene(rng, sampling, roof_offset)
-        if(scene_ok(scene, sampling["min_gap"], sampling["min_angle"])):
+        if scene_ok(scene, sampling["min_gap"]):
             return scene
     raise ValueError(
         f"No valid scene after {max_tries} tries "
-        f"(min_gap={sampling['min_gap']}, min_angle={sampling['min_angle']})"
+        f"(min_gap={sampling['min_gap']})"
     )
 
 def main():
@@ -109,7 +98,7 @@ def main():
 
     time.sleep(1.0)  # let the box settle
 
-    # Verify: each model ended up within 5 mm (x/y) of where we put it.
+    # Verify: each model ended up within 5 mm (x/y)
     settled = {name: read_pose(name) for name in requested}
     verified = all(
         math.hypot(settled[name][0] - x, settled[name][1] - y) < 0.005
