@@ -19,6 +19,7 @@ RENAME = {"observation.images.top": "observation.images.camera1",
 ckpt = sys.argv[1]
 cfg = PreTrainedConfig.from_pretrained(ckpt)
 cfg.pretrained_path = ckpt  # without this make_policy builds random weights
+cfg.n_action_steps = 1  # re-plan every tick so the policy sees what its last action did
 rename = RENAME if cfg.type == "smolvla" else {}
 meta = LeRobotDatasetMetadata("local/crane_pick_place", root=REPO/"lerobot_data/crane_pick_place")
 policy = make_policy(cfg, ds_meta=meta, rename_map=rename).eval()

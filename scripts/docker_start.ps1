@@ -8,7 +8,6 @@ if ($proxyUrl) {
   $proxyArgs += "-e", "NO_PROXY=localhost,127.0.0.1,::1", "-e", "no_proxy=localhost,127.0.0.1,::1"
 }
 
-# Create your project folder if needed
 New-Item -ItemType Directory -Force "C:\crane-arm\src" | Out-Null
 
 docker run `

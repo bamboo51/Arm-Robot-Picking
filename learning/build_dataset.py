@@ -1,8 +1,10 @@
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from pathlib import Path
+import os
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
+K = int(os.environ.get("K", 5))  # action = joint angles K frames (K/10 s) ahead; eval_offline.py needs the same K
 JOINTS = ["crane_plus_joint1", "crane_plus_joint2", "crane_plus_joint3",
           "crane_plus_joint4", "crane_plus_joint_hand"] 
 features = {
@@ -17,12 +19,17 @@ ds = LeRobotDataset.create(
     root=REPO /"lerobot_data/crane_pick_place", 
     features=features)
 
-for npz in sorted((REPO / "datasets").glob("*/episode.npz")):
+for npz in sorted((REPO / "datasets" / "train").glob("*/episode.npz")):  # val/ and test/ stay out of training
     e = dict(np.load(npz))  # NpzFile re-decompresses the whole array on every e[key]
-    for i in range(len(e["state"])):
+    n = len(e["state"])
+    for i in range(n):
+        # skip idle frames (nothing moves in the next K frames): their "when to start" is invisible, so the
+        # policy learns to stay put and never leaves the start pose
+        if np.abs(e["state"][min(i + K, n - 1)] - e["state"][i]).max() < 1e-3:
+            continue
         ds.add_frame({
             "observation.state": e["state"][i],
-            "action": e["action"][i],
+            "action": e["state"][min(i + K, n - 1)],
             "observation.images.top": e["top"][i],
             "observation.images.left": e["left"][i],
             "observation.images.right": e["right"][i],

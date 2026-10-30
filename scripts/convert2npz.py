@@ -48,14 +48,14 @@ if __name__ == "__main__":
     import json
     from sim_utils import DATASET_DIR
 
-    for ep_dir in sorted(DATASET_DIR.iterdir()):
-        result = ep_dir / "result.json"
+    for result in sorted(DATASET_DIR.rglob("result.json")):  # recorded episodes in train/, val/, test/
+        ep_dir = result.parent
         # episodes recorded before the roof check have no "success" key; keep them
-        r = json.loads(result.read_text()) if result.exists() else {}
+        r = json.loads(result.read_text())
         if r.get("expert_exit") != 0 or not r.get("success", True):
             continue
         if (ep_dir / "episode.npz").exists():
             continue
 
-        print(f"== {ep_dir.name} ==")
+        print(f"== {ep_dir.relative_to(DATASET_DIR)} ==")
         export(ep_dir)
