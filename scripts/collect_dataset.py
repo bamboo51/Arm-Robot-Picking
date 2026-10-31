@@ -12,7 +12,9 @@ from convert2npz import export
 # No /clock: ~1 kHz of tiny messages overflows the writer; message stamps suffice.
 TOPICS = [
     "/joint_states",
-    "/camera_top/image_raw", "/camera_left/image_raw", "/camera_right/image_raw"
+    "/camera_top/image_raw",
+    # "/camera_left/image_raw", "/camera_right/image_raw",
+    "/camera_wrist/image_raw"
 ]
 # Record on the container's own disk; the bind-mounted repo is too slow for raw images.
 LOCAL = Path.home() / "bags_temp"

@@ -6,8 +6,9 @@ from sensor_msgs.msg import Image, JointState
 
 FPS = 10
 JOINTS = ["crane_plus_joint1", "crane_plus_joint2", "crane_plus_joint3", "crane_plus_joint4", "crane_plus_joint_hand"]
-CAMS = {"/camera_top/image_raw": "top", "/camera_left/image_raw": "left",
-        "/camera_right/image_raw": "right"}
+CAMS = {"/camera_top/image_raw": "top",
+        # "/camera_left/image_raw": "left", "/camera_right/image_raw": "right",
+        "/camera_wrist/image_raw": "wrist"}
 
 def read_bag(path):
     reader = rosbag2_py.SequentialReader()
@@ -30,11 +31,15 @@ def read_bag(path):
     return joints, frames
 
 def nearest(stamped, t):
+    """Latest sample at or before t (zero-order hold): at run time the policy never sees a future message."""
     times = np.array([s for s, _ in stamped])
-    return stamped[int(np.abs(times -t).argmin())][1]
+    return stamped[max(int(np.searchsorted(times, t, side="right")) - 1, 0)][1]
 
 def export(ep_dir):
     joints, frames = read_bag(ep_dir / "bag")
+    # bag order is arrival order; nearest() needs each stream sorted by header stamp
+    joints = sorted(joints, key=lambda s: s[0])
+    frames = {k: sorted(v, key=lambda s: s[0]) for k, v in frames.items()}
     start = max(joints[0][0], *(f[0][0] for f in frames.values()))
     end = min(joints[-1][0], *(f[-1][0] for f in frames.values()))
     ticks = np.arange(start, end, 1.0/FPS)
