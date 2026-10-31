@@ -14,7 +14,7 @@ __pycache__/
 # dataset
 datasets*/
 fuel_cache/
-lerobot_data/
+lerobot_data*/
 
 # checkpoint
 learning/checkpoints/
