@@ -31,21 +31,24 @@ def run(command: list[str]) -> str:
         raise SystemExit(f"Could not run {command[0]} (is Gazebo running?): {exc}")
     return result.stdout + result.stderr
 
-def set_pose(world: str, name: str, x: float, y: float, z: float, yaw: float) -> None:
-    """Move one Gazebo model. Exit if Gazebo does not accept it."""
+def set_pose(world: str, name: str, x: float, y: float, z: float, yaw: float, attempts: int = 3) -> None:
+    """Move one Gazebo model. Exit if Gazebo does not accept it after `attempts` tries."""
     q = yaw_quaternion(yaw)
     request = (
         f"name: {json.dumps(name)} "
         f"position: {{x: {x:.9f}, y: {y:.9f}, z: {z:.9f}}} "
         f"orientation: {{x: {q['x']}, y: {q['y']}, z: {q['z']:.9f}, w: {q['w']:.9f}}}"
     )
-    response = run([
-        "ign", "service", "-s", f"/world/{world}/set_pose",
-        "--reqtype", "ignition.msgs.Pose", "--reptype", "ignition.msgs.Boolean",
-        "--timeout", "5000", "--req", request,
-    ])
-    if not re.search(r"\bdata:\s*true\b", response):
-        raise SystemExit(f"Gazebo did not accept the pose for {name}:\n{response}")
+    for _ in range(attempts):
+        response = run([
+            "ign", "service", "-s", f"/world/{world}/set_pose",
+            "--reqtype", "ignition.msgs.Pose", "--reptype", "ignition.msgs.Boolean",
+            "--timeout", "5000", "--req", request,
+        ])
+        if re.search(r"\bdata:\s*true\b", response):
+            return
+        time.sleep(2.0)  # Gazebo was busy (service unavailable / timed out); try again
+    raise SystemExit(f"Gazebo did not accept the pose for {name} after {attempts} tries:\n{response}")
 
 def read_pose(name: str, attempts: int = 3) -> tuple[float, float, float]:
     """x, y, z of a model, from the first [x y z] line after "Pose" in `ign model -p`."""
