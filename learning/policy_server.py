@@ -2,6 +2,7 @@
 Serve a trained LeRobot policy over ZMQ for scripts/infer_node.py
 /opt/lerobot-venv/bin/python learning/policy_server.py <checkpoint>/pretrained_model
 """
+import os
 import sys
 from pathlib import Path
 
@@ -19,7 +20,8 @@ RENAME = {"observation.images.top": "observation.images.camera1",
 ckpt = sys.argv[1]
 cfg = PreTrainedConfig.from_pretrained(ckpt)
 cfg.pretrained_path = ckpt  # without this make_policy builds random weights
-cfg.n_action_steps = 1  # re-plan every tick so the policy sees what its last action did
+# N=1 re-plans every tick; from rest the first action is ~"stay", so N>1 executes more of the chunk to get moving
+cfg.n_action_steps = int(os.environ.get("N", 1))
 rename = RENAME if cfg.type == "smolvla" else {}
 meta = LeRobotDatasetMetadata("local/crane_pick_place", root=REPO/"lerobot_data/crane_pick_place")
 policy = make_policy(cfg, ds_meta=meta, rename_map=rename).eval()
@@ -36,7 +38,8 @@ while True:
     msg = sock.recv_pyobj()
     if msg.get("reset"):
         policy.reset()
-    obs = {f"observation.images.{c}": torch.from_numpy(msg[c]).permute(2, 0, 1).float() / 255 for c in ("top", "left", "right")}
+    # obs = {f"observation.images.{c}": torch.from_numpy(msg[c]).permute(2, 0, 1).float() / 255 for c in ("top", "left", "right", "wrist")}
+    obs = {f"observation.images.{c}": torch.from_numpy(msg[c]).permute(2, 0, 1).float() / 255 for c in ("top", "wrist")}
     obs["observation.state"] = torch.from_numpy(msg["state"])
     obs["task"] = msg.get("task", "put the box on the car")
     with torch.no_grad():

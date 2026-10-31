@@ -26,16 +26,19 @@ def main():
     results = {}
     for ep_dir in sorted(p.parent for p in (DATASET_DIR / "test").glob("*/episode.npz")):
         state = np.load(ep_dir / "episode.npz")["state"]
-        # same start pose and episode length as the expert demonstration, plus slack
-        move_to(ARM, state[0, :4], "/crane_plus_arm_controller/joint_trajectory")
-        move_to(HAND, state[0, 4:], "/crane_plus_gripper_controller/joint_trajectory")
+        # start where the expert's arm first moves (upright, gripper reset to 0): before that the expert only waits
+        # and resets the gripper, with no visible cue for when it starts, so the policy would wait forever
+        # 0.01 rad/frame: the expert's first command nudges the already-upright arm by ~0.01 rad in total; skip that
+        start = int(np.argmax(np.abs(np.diff(state[:, :4], axis=0)).max(1) > 0.01))
+        move_to(ARM, state[start, :4], "/crane_plus_arm_controller/joint_trajectory")
+        move_to(HAND, state[start, 4:], "/crane_plus_gripper_controller/joint_trajectory")
         time.sleep(3.0)
         place_scene("default", json.loads((ep_dir / "initial_pose.json").read_text())["scene"], cfg)
         time.sleep(1.0)
 
         print(f"== {ep_dir.name}", flush=True)
         node = subprocess.Popen([sys.executable, "scripts/infer_node.py"])
-        time.sleep(len(state) / 10 + 10)
+        time.sleep((len(state) - start) / 10 + 10)  # the expert's remaining time, plus slack
         node.terminate()
         node.wait(timeout=10)
 
