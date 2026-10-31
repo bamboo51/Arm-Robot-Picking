@@ -33,11 +33,11 @@ grasp:
 sampling:                 # where randomized objects may be placed (MoveIt frame, polar around the base)
   margin: 0.01            # keep this far inside the computed reachable r range
   base_clearance: 0.08    # objects closer than this would hit the robot body
-  box_theta: [20, 90]     # degrees; box on the left (+y), at least 20 deg from straight ahead
-  car_theta: [-90, -20]   # degrees; car on the right (-y)
+  box_theta: [-110, -20]  # degrees; box on the right (-y), a 90 deg range at least 20 deg from straight ahead
+  car_theta: [90, 90]     # degrees; car fixed straight to the left (+y); equal bounds = fixed
   # r ranges below: paste from `python scripts/reachability.py`
   box_r: [0.080, 0.124]
-  car_r: [0.080, 0.124]
+  car_r: [0.102, 0.102]   # fixed, middle of the reachable range [0.080, 0.124]
   min_gap: 0.13           # box center to car roof center; recorded episodes failed 5/9 below 0.13, 0/95 above
 
 success:
