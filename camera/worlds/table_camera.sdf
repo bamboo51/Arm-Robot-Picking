@@ -43,9 +43,7 @@
     </include>
 
     <include>
-      <uri>
-        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Wood%20cube%205cm
-      </uri>
+      <uri>model://red_cube_5cm</uri>
       <name>pick_box</name>
       <pose>0 -0.1 1.015 0 0 0</pose>
     </include>
@@ -61,7 +59,7 @@
       <static>true</static>
       <!-- x y z roll pitch yaw, in world coordinates-->
       <!-- Positive 90-degree pitch points the camera downward-->
-      <pose>0.25 0 1.80 0 1.5708 0</pose>
+      <pose>0.0 0 1.75 0 1.5708 0</pose>
 
       <link name="camera_link">
         <sensor name="camera_sensor" type="camera">
@@ -90,10 +88,10 @@
         </sensor>
       </link>
     </model>
-    <!-- Side cameras look inward and down toward the tabletop. -->
+    <!-- Side cameras look inward and down toward the tabletop. Disabled (top + wrist only);
     <model name="camera_left">
       <static>true</static>
-      <pose>0.25 0.50 1.50 0 0.7854 -1.5708</pose>
+      <pose>0.0 0.35 1.365 0 0.7854 -1.5708</pose>
       <link name="camera_link">
         <sensor name="camera_sensor" type="camera">
           <always_on>true</always_on>
@@ -118,7 +116,7 @@
 
     <model name="camera_right">
       <static>true</static>
-      <pose>0.25 -0.50 1.50 0 0.7854 1.5708</pose>
+      <pose>0.0 -0.35 1.365 0 0.7854 1.5708</pose>
       <link name="camera_link">
         <sensor name="camera_sensor" type="camera">
           <always_on>true</always_on>
@@ -140,5 +138,6 @@
         </sensor>
       </link>
     </model>
+    end of disabled side cameras -->
   </world>
 </sdf>

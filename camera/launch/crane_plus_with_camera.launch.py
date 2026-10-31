@@ -68,7 +68,10 @@ def generate_launch_description():
     description_loader.use_ignition = 'true'
     description_loader.gz_control_config_package = 'crane_plus_control'
     description_loader.gz_control_config_file_path = 'config/crane_plus_controllers.yaml'
+    description_loader.robot_description_path = os.path.join(
+        project_root, 'models', 'crane_plus', 'crane_plus_wrist_cam.urdf.xacro')
     description = description_loader.load()
+
 
     move_group = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([

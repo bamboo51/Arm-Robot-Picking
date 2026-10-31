@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Run inside the ROS Docker container. Stop with Ctrl+C.
 export IGN_GAZEBO_RESOURCE_PATH=~/airobot_ws/src/user_code/models:$IGN_GAZEBO_RESOURCE_PATH
 set -eo pipefail
 
@@ -55,7 +54,8 @@ setsid ros2 launch \
 pids+=("$!")
 if [[ "$CAMERAS" == 1 ]]; then
   bridge_args=()
-  for camera in top left right; do
+  # for camera in top left right wrist; do
+  for camera in top wrist; do
     bridge_args+=(
       "/camera_${camera}/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image"
       "/camera_${camera}/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo"
