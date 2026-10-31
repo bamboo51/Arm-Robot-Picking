@@ -14,6 +14,7 @@ import torch
 from lerobot.configs.policies import PreTrainedConfig
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies import make_policy, make_pre_post_processors
+from gripper_label import hand_target
 
 ROOT = Path(os.environ.get("DATA", Path.home() / "arm/lerobot_data/crane_pick_place")).expanduser()
 K = int(os.environ.get("K", 5))
@@ -38,12 +39,17 @@ def frames():
         return
     e = dict(np.load(ep))
     n = len(e["state"])
+    action = e["state"][np.minimum(np.arange(n) + K, n - 1)].copy()
+    action[:, 4] = hand_target(e["state"][:, 4], K)  # same labels as build_dataset.py
     for i in range(n):
+        if np.abs(e["state"][min(i + K, n - 1)] - e["state"][i]).max() < 1e-3:
+            continue  # idle frame: build_dataset.py drops these, so the policy never trained on them
         # same layout the dataset returns: CHW float in [0, 1]
         imgs = {f"observation.images.{c}": torch.from_numpy(e[c][i]).permute(2, 0, 1).float() / 255
-                for c in ("top", "left", "right")}
+                # for c in ("top", "left", "right", "wrist")}
+                for c in ("top", "wrist")}
         yield imgs | {"observation.state": torch.from_numpy(e["state"][i]),
-                      "task": "put the box on the car"}, torch.from_numpy(e["state"][min(i + K, n - 1)])
+                      "task": "put the box on the car"}, torch.from_numpy(action[i])
 cfg = PreTrainedConfig.from_pretrained(ckpt)
 cfg.pretrained_path = ckpt
 cfg.n_action_steps = 1  # re-plan every frame, so every prediction sees the current frame
