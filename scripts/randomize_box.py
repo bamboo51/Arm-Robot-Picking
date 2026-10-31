@@ -44,7 +44,8 @@ def sample_scene(rng: random.Random, sampling: dict, roof_offset: float) -> dict
 
 def scene_ok(s: dict, min_gap: float) -> bool:
     """False if the box is too close to the car roof (min_gap in meters).
-    Box and car are on opposite sides (box_theta / car_theta), so their angles never clash."""
+    Box and car are on opposite sides (box_theta / car_theta), so their angles never clash.
+    Equal bounds in car_theta / car_r fix the car in place."""
     box, car = s["box"], s["car"]
     return math.hypot(box["x"] - car["roof_x"], box["y"] - car["roof_y"]) >= min_gap
 
